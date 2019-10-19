@@ -46,8 +46,20 @@ int solved;
 ** Aby se minimalizoval počet přístupů ke struktuře zásobníku, můžete zde
 ** nadeklarovat a používat pomocnou proměnnou typu char.
 */
-void untilLeftPar ( tStack* s, char* postExpr, unsigned* postLen ) {
-
+void untilLeftPar ( tStack* s, char* postExpr, unsigned* postLen )
+{
+    char* tmp = NULL;
+    if(stackEmpty(s) == 0)
+        stackTop(s, tmp);
+    while(stackEmpty(s) == 0)
+    {
+        postExpr[*postLen] = *tmp;
+        stackTop(s, tmp);
+        stackPop(s);
+        postLen++;
+        if(*tmp != '(')
+            break;
+    }
 }
 
 /*
@@ -60,7 +72,8 @@ void untilLeftPar ( tStack* s, char* postExpr, unsigned* postLen ) {
 ** výrazu a taktéž ukazatel na první volné místo, do kterého se má zapisovat, 
 ** představuje parametr postLen, výstupním polem znaků je opět postExpr.
 */
-void doOperation ( tStack* s, char c, char* postExpr, unsigned* postLen ) {
+void doOperation ( tStack* s, char c, char* postExpr, unsigned* postLen )
+{
 
 }
 
@@ -110,12 +123,50 @@ void doOperation ( tStack* s, char c, char* postExpr, unsigned* postLen ) {
 */
 char* infix2postfix (const char* infExpr)
 {
-    tStack stack;
-    int infIndex, postIndex = 0;
+    tStack* stack = (tStack*) malloc(sizeof(tStack));
+    if(stack == NULL)
+        return NULL;
 
+    char* postExpr = (char*) malloc(MAX_LEN * sizeof(char));
+    if(postExpr == NULL)
+        return NULL;
 
-    solved = 0;                        /* V případě řešení smažte tento řádek! */
-    return NULL;                /* V případě řešení můžete smazat tento řádek. */
+    unsigned infIndex, postIndex = 0;  //postIndex je vlastne postLen
+    char inputChar = '?';
+
+    while(inputChar != '\0')
+    {
+        if(('a' <= inputChar && inputChar <= 'z') || ('A' <= inputChar && inputChar <= 'Z') || ('0' <= inputChar && inputChar <= '9'))
+            postExpr[postIndex++] = inputChar;
+
+        else if(inputChar == '(')
+            stackPush(stack, inputChar);
+
+        else if(inputChar == '+' || inputChar == '-' || inputChar == '*' || inputChar == '/')
+            doOperation(stack, inputChar, postExpr, &postIndex);
+
+        else if(inputChar == ')')
+            untilLeftPar(stack, postExpr, &postIndex);
+
+        else if(infIndex == '=')
+        {
+            char* tmp = NULL;
+            if(stackEmpty(stack) == 0)
+                stackTop(stack, tmp);
+            while(stackEmpty(stack) == 0)
+            {
+                postExpr[postIndex] = *tmp;
+                stackTop(stack, tmp);
+                stackPop(stack);
+                postIndex++;
+            }
+        }
+        inputChar = infExpr[++infIndex];
+    }
+
+    postExpr[++postIndex] = '=';
+    free(stack);  //postExpr neuvolnuji, protoze bych si smazal svuj vysledek
+    return postExpr;
 }
 
 /* Konec c204.c */
