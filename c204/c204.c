@@ -49,11 +49,11 @@ int solved;
 void untilLeftPar ( tStack* s, char* postExpr, unsigned* postLen )
 {
     char* tmp = NULL;
-    if(stackEmpty(s) == 0)
+    if(stackEmpty(s) != 0)
         stackTop(s, tmp);
-    while(stackEmpty(s) == 0)
+    while(stackEmpty(s) != 0)
     {
-        postExpr[*postLen] = *tmp;
+        postExpr[(*postLen)] = *tmp;
         stackTop(s, tmp);
         stackPop(s);
         postLen++;
@@ -74,7 +74,26 @@ void untilLeftPar ( tStack* s, char* postExpr, unsigned* postLen )
 */
 void doOperation ( tStack* s, char c, char* postExpr, unsigned* postLen )
 {
+    char* tmp = NULL;
+    stackTop(s, tmp);
 
+    if ((stackEmpty(s) != 0) || ((*tmp) == '('))
+    {
+        printf("%c", '?');
+        stackPush(s, c);
+        return;
+    }
+
+    else if ((*tmp == '+' || *tmp == '-') && (c == '*' || c == '/'))
+    {
+        printf("%c", '!');
+        stackPush(s, c);
+        return;
+    }
+    postExpr[(*postLen)] = *tmp;
+    stackPop(s);
+
+    doOperation(s, c, postExpr, postLen);
 }
 
 /*
@@ -131,8 +150,11 @@ char* infix2postfix (const char* infExpr)
     if(postExpr == NULL)
         return NULL;
 
-    unsigned infIndex, postIndex = 0;  //postIndex je vlastne postLen
-    char inputChar = '?';
+    stackInit(stack);
+
+    unsigned infIndex = 0;
+    unsigned postIndex = 0;  //postIndex je vlastne postLen
+    char inputChar = infExpr[infIndex];
 
     while(inputChar != '\0')
     {
@@ -142,18 +164,21 @@ char* infix2postfix (const char* infExpr)
         else if(inputChar == '(')
             stackPush(stack, inputChar);
 
-        else if(inputChar == '+' || inputChar == '-' || inputChar == '*' || inputChar == '/')
-            doOperation(stack, inputChar, postExpr, &postIndex);
+        else if(inputChar == '+' || inputChar == '-' || inputChar == '*' || inputChar == '/') {
+            printf("%c", inputChar);
+            doOperation(stack, inputChar, postExpr, (&postIndex));
+            printf("%c", inputChar);
+        }
 
         else if(inputChar == ')')
-            untilLeftPar(stack, postExpr, &postIndex);
+            untilLeftPar(stack, postExpr, (&postIndex));
 
         else if(infIndex == '=')
         {
             char* tmp = NULL;
-            if(stackEmpty(stack) == 0)
+            if(stackEmpty(stack) != 0)
                 stackTop(stack, tmp);
-            while(stackEmpty(stack) == 0)
+            while(stackEmpty(stack) != 0)
             {
                 postExpr[postIndex] = *tmp;
                 stackTop(stack, tmp);
@@ -161,7 +186,9 @@ char* infix2postfix (const char* infExpr)
                 postIndex++;
             }
         }
+        //printf("%c", inputChar);
         inputChar = infExpr[++infIndex];
+        //printf("%c", inputChar);
     }
 
     postExpr[++postIndex] = '=';
