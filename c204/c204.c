@@ -49,16 +49,15 @@ int solved;
 void untilLeftPar ( tStack* s, char* postExpr, unsigned* postLen )
 {
     char* tmp = NULL;
-    if(stackEmpty(s) != 0)
+    if(stackEmpty(s) == 0)  //pokud NENI prazdny je to rovno nule
         stackTop(s, tmp);
-    while(stackEmpty(s) != 0)
+    while(stackEmpty(s) == 0) //dokud je to rovvno nule, tak to znamena ze stack neni prazdny
     {
-        postExpr[(*postLen)] = *tmp;
-        stackTop(s, tmp);
         stackPop(s);
-        postLen++;
         if(*tmp != '(')
             break;
+        postExpr[(*postLen)++] = *tmp;
+        stackTop(s, tmp);
     }
 }
 
@@ -74,26 +73,35 @@ void untilLeftPar ( tStack* s, char* postExpr, unsigned* postLen )
 */
 void doOperation ( tStack* s, char c, char* postExpr, unsigned* postLen )
 {
-    char* tmp = NULL;
-    stackTop(s, tmp);
-
-    if ((stackEmpty(s) != 0) || ((*tmp) == '('))
+    if (stackEmpty(s) != 0) // nerovna se nule znamena je prazdny
     {
-        printf("%c", '?');
+        //printf("%s", "byl prazdny\n");
+        stackPush(s, c);
+        //printf("%c\n", s->arr[s->top]);
+        return;
+    }
+
+    char* tmp = NULL;
+    stackTop(s, tmp);  //prvni znak
+
+    if ((*tmp) == '(')
+    {
+        printf("%s", "byla leva zavorka\n");
         stackPush(s, c);
         return;
     }
 
     else if ((*tmp == '+' || *tmp == '-') && (c == '*' || c == '/'))
     {
-        printf("%c", '!');
+        printf("%s", "byl operand\n");
         stackPush(s, c);
         return;
     }
-    postExpr[(*postLen)] = *tmp;
+    postExpr[(*postLen)++] = *tmp;
+    printf("%c", postExpr[(*postLen)]);
     stackPop(s);
 
-    doOperation(s, c, postExpr, postLen);
+    doOperation(s, c, postExpr, postLen);  //rekurze dokud se nepodari splnit podminka
 }
 
 /*
@@ -148,13 +156,16 @@ char* infix2postfix (const char* infExpr)
 
     char* postExpr = (char*) malloc(MAX_LEN * sizeof(char));
     if(postExpr == NULL)
+    {
+        free(stack);
         return NULL;
+    }
 
     stackInit(stack);
 
     unsigned infIndex = 0;
     unsigned postIndex = 0;  //postIndex je vlastne postLen
-    char inputChar = infExpr[infIndex];
+    char inputChar = infExpr[infIndex];  //prvni znak
 
     while(inputChar != '\0')
     {
@@ -165,33 +176,37 @@ char* infix2postfix (const char* infExpr)
             stackPush(stack, inputChar);
 
         else if(inputChar == '+' || inputChar == '-' || inputChar == '*' || inputChar == '/') {
-            printf("%c", inputChar);
+            //printf("%c", inputChar);
             doOperation(stack, inputChar, postExpr, (&postIndex));
-            printf("%c", inputChar);
+            //printf("%c\n", stack->arr[stack->top]);
+            //printf("%c", inputChar);
         }
 
         else if(inputChar == ')')
             untilLeftPar(stack, postExpr, (&postIndex));
 
-        else if(infIndex == '=')
+        else if(inputChar == '=')
         {
             char* tmp = NULL;
-            if(stackEmpty(stack) != 0)
-                stackTop(stack, tmp);
-            while(stackEmpty(stack) != 0)
+            //printf("%d\n", stackEmpty(stack));
+            //printf("%c\n", stack->arr[stack->top]);
+            while(stackEmpty(stack) == 0)  //dokud JE rovno 0 znamena ze NENI prazdny
             {
-                postExpr[postIndex] = *tmp;
+                printf("%c\n", stack->arr[stack->top]);
                 stackTop(stack, tmp);
+                postExpr[postIndex++] = *tmp;
                 stackPop(stack);
-                postIndex++;
+                printf("%c", *tmp);
             }
+            postExpr[postIndex++] = '=';
+            break;
         }
         //printf("%c", inputChar);
         inputChar = infExpr[++infIndex];
         //printf("%c", inputChar);
     }
+    postExpr[postIndex] = '\0';
 
-    postExpr[++postIndex] = '=';
     free(stack);  //postExpr neuvolnuji, protoze bych si smazal svuj vysledek
     return postExpr;
 }
