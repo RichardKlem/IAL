@@ -48,16 +48,17 @@ int solved;
 */
 void untilLeftPar ( tStack* s, char* postExpr, unsigned* postLen )
 {
-    char* tmp = NULL;
-    if(stackEmpty(s) == 0)  //pokud NENI prazdny je to rovno nule
-        stackTop(s, tmp);
+    char tmp;
     while(stackEmpty(s) == 0) //dokud je to rovvno nule, tak to znamena ze stack neni prazdny
     {
+        stackTop(s, &tmp);
         stackPop(s);
-        if(*tmp != '(')
+        if(tmp == '(')
+        {
+            stackPop(s);
             break;
-        postExpr[(*postLen)++] = *tmp;
-        stackTop(s, tmp);
+        }
+        postExpr[(*postLen)++] = tmp;
     }
 }
 
@@ -75,30 +76,26 @@ void doOperation ( tStack* s, char c, char* postExpr, unsigned* postLen )
 {
     if (stackEmpty(s) != 0) // nerovna se nule znamena je prazdny
     {
-        //printf("%s", "byl prazdny\n");
         stackPush(s, c);
-        //printf("%c\n", s->arr[s->top]);
         return;
     }
 
-    char* tmp = NULL;
-    stackTop(s, tmp);  //prvni znak
+    char tmp;
+    stackTop(s, &tmp);  //prvni znak
 
-    if ((*tmp) == '(')
+    if ((tmp) == '(')
     {
-        printf("%s", "byla leva zavorka\n");
         stackPush(s, c);
         return;
     }
 
-    else if ((*tmp == '+' || *tmp == '-') && (c == '*' || c == '/'))
+    else if ((c == '*' || c == '/') && (tmp == '+' || tmp == '-'))
     {
-        printf("%s", "byl operand\n");
         stackPush(s, c);
         return;
     }
-    postExpr[(*postLen)++] = *tmp;
-    printf("%c", postExpr[(*postLen)]);
+    postExpr[(*postLen)++] = tmp;
+    //printf("%c", postExpr[(*postLen)]);
     stackPop(s);
 
     doOperation(s, c, postExpr, postLen);  //rekurze dokud se nepodari splnit podminka
@@ -176,10 +173,7 @@ char* infix2postfix (const char* infExpr)
             stackPush(stack, inputChar);
 
         else if(inputChar == '+' || inputChar == '-' || inputChar == '*' || inputChar == '/') {
-            //printf("%c", inputChar);
             doOperation(stack, inputChar, postExpr, (&postIndex));
-            //printf("%c\n", stack->arr[stack->top]);
-            //printf("%c", inputChar);
         }
 
         else if(inputChar == ')')
@@ -187,16 +181,16 @@ char* infix2postfix (const char* infExpr)
 
         else if(inputChar == '=')
         {
-            char* tmp = NULL;
+            char tmp;
             //printf("%d\n", stackEmpty(stack));
             //printf("%c\n", stack->arr[stack->top]);
             while(stackEmpty(stack) == 0)  //dokud JE rovno 0 znamena ze NENI prazdny
             {
-                printf("%c\n", stack->arr[stack->top]);
-                stackTop(stack, tmp);
-                postExpr[postIndex++] = *tmp;
+                //printf("%c\n", stack->arr[stack->top]);
+                stackTop(stack, &tmp);
+                postExpr[postIndex++] = tmp;
                 stackPop(stack);
-                printf("%c", *tmp);
+                //printf("%c", &tmp);
             }
             postExpr[postIndex++] = '=';
             break;
