@@ -49,15 +49,12 @@ int solved;
 void untilLeftPar ( tStack* s, char* postExpr, unsigned* postLen )
 {
     char tmp;
-    while(stackEmpty(s) == 0) //dokud je to rovvno nule, tak to znamena ze stack neni prazdny
+    while(stackEmpty(s) == 0) //dokud JE to rovno nule, tak to znamena ze stack NENI prazdny
     {
         stackTop(s, &tmp);
         stackPop(s);
         if(tmp == '(')
-        {
-            stackPop(s);
-            break;
-        }
+            break;  // kdyz dojde na levou zavorku, tak konci, zavorka je jiz z predchoziho kroku popnuta
         postExpr[(*postLen)++] = tmp;
     }
 }
@@ -89,13 +86,13 @@ void doOperation ( tStack* s, char c, char* postExpr, unsigned* postLen )
         return;
     }
 
-    else if ((c == '*' || c == '/') && (tmp == '+' || tmp == '-'))
+    if ((c == '*' || c == '/') && (tmp == '+' || tmp == '-'))
     {
         stackPush(s, c);
         return;
     }
+
     postExpr[(*postLen)++] = tmp;
-    //printf("%c", postExpr[(*postLen)]);
     stackPop(s);
 
     doOperation(s, c, postExpr, postLen);  //rekurze dokud se nepodari splnit podminka
@@ -182,22 +179,16 @@ char* infix2postfix (const char* infExpr)
         else if(inputChar == '=')
         {
             char tmp;
-            //printf("%d\n", stackEmpty(stack));
-            //printf("%c\n", stack->arr[stack->top]);
             while(stackEmpty(stack) == 0)  //dokud JE rovno 0 znamena ze NENI prazdny
             {
-                //printf("%c\n", stack->arr[stack->top]);
                 stackTop(stack, &tmp);
                 postExpr[postIndex++] = tmp;
                 stackPop(stack);
-                //printf("%c", &tmp);
             }
             postExpr[postIndex++] = '=';
             break;
         }
-        //printf("%c", inputChar);
         inputChar = infExpr[++infIndex];
-        //printf("%c", inputChar);
     }
     postExpr[postIndex] = '\0';
 
